@@ -20,13 +20,13 @@ LiquidCrystal_I2C lcd(I2C_ADDR, 4, 5, 6, 0, 1, 2, 3, 7, NEGATIVE);
  
  // variables globales Encoder
  int val;
- int encoder0Pos = 0;
+ byte encoder0Pos = 0;
  byte encoder0PinALast = LOW;
  byte n = LOW;
 
 // Variables monitor
 byte peso = 0;
-byte escala=0;  // 0=L ; 1=m3
+byte unidad=0;  // 0=L ; 1=m3
 byte tiempo=0;  // 0= s; 1= m ; 2= m3
 
 //----------------------------------------------------------------------------------------------------
@@ -59,19 +59,23 @@ byte tiempo=0;  // 0= s; 1= m ; 2= m3
  }// fin loop
  
 //----------------------------------------------------------------------------------------------------
- void leeEncoder ()
+ void leeEncoder (byte min, byte max)
  {
   
      n = digitalRead(encoder0PinA);
      if ((encoder0PinALast == LOW) && (n == HIGH)) {
      if (digitalRead(encoder0PinB) == LOW) {
+      
        encoder0Pos--;
+       if ((encoder0Pos <min) || (encoder0Pos > max)) encoder0Pos = max;
      } else {
        encoder0Pos++;
+       if (encoder0Pos >max) encoder0Pos = min;
      }
-     lcd.setCursor (0,0);
-     lcd.print (encoder0Pos);
+     //lcd.setCursor (0,0);
+    // lcd.print (encoder0Pos);
     
+   }
    encoder0PinALast = n;
   
  }
@@ -83,20 +87,68 @@ byte tiempo=0;  // 0= s; 1= m ; 2= m3
    byte n_max = 255;        // valor maximo para este caso
    boolean salida = true;   // variable control para salir de bucle 
    
+   
+
+
+   // ajuste peso de pulso
+   encoder0Pos=0;
    lcd.setCursor (0,0);
    lcd.print ("Peso del pulso?");
-   
    do 
    {
-    lcd.setCursor (0,12);
-    lcd.print (n);
-    leeEncoder();
+    
+    leeEncoder(0,255);
     if (!digitalRead (sw))
       salida = false;
-    
+    lcd.setCursor (12,1);
+    lcd.print (encoder0Pos);
    }while (salida);
+   peso=encoder0Pos;
+  
+  do
+  {
+    delay(40);
+  }while (digitalRead (sw));
+  lcd.clear();
+  lcd.print ("Peso: ");
+  lcd.print (peso);
+  delay(1000);
    
-   
+   // ajuste unidad de medida // 0=L ; 1=m3
+   encoder0Pos=0;
+   lcd.clear();
+   salida = true; 
+   lcd.setCursor (0,0);
+   lcd.print ("Unidad de medida?");
+   do 
+   {
+    
+    leeEncoder(0,1);
+    if (!digitalRead (sw))
+      salida = false;
+    lcd.setCursor (5,1);
+    if (encoder0Pos == 0)
+          lcd.print ("Litros");
+     if (encoder0Pos ==1)
+          lcd.print ("  m3  ");
+    }while (salida);
+  unidad = encoder0Pos;
+  
+  do
+  {
+    delay(40);
+  }while (digitalRead (sw));
+
+  lcd.clear();
+  lcd.print ("Unidad: ");
+  if (unidad ==0)
+    lcd.print ("Litros");
+  if (unidad ==1 )
+    lcd.print ("  m3  ");
+     
+  delay(1000);
+
+  
  }
 
 
