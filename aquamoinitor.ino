@@ -20,10 +20,10 @@
 LiquidCrystal_I2C lcd(I2C_ADDR, 4, 5, 6, 0, 1, 2, 3, 7, NEGATIVE);
 
 // pines Encoder.
-#define encoder0PinA  3
-#define encoder0PinB  4
-#define sw 5
-#define entrada 2
+#define encoder0PinA  3     //  pin clk encoder
+#define encoder0PinB  4     //  pin dw  encoder
+#define sw 5                // interruptor encoder -- LOGICA NEGATIVA
+#define entrada 2           // entrada de los pulsos por interrupcion -- LOGICA NEGATIVA
 
 // variables globales Encoder
 int val;
@@ -36,6 +36,15 @@ byte peso = 0;
 byte unidad = 0; // 0=L ; 1=m3
 byte caudal = 0; // 0= l/s;  ; 1= m3/h
 
+// varible control tiempo
+long tiempo=0;
+long tiempoAnterior=0;
+long contador = 0;
+float calculoQ;
+
+// variable interrupciones 
+long t0=0;
+#define rebote 60     //ms
 //----------------------------------------------------------------------------------------------------
 void setup() {
 
@@ -66,6 +75,7 @@ void setup() {
     if (bucle == false)
     {
       ajuste();
+      // grabacion en la eeprom de los nuevos valores.
       EEPROM.write(ee_peso, peso);
       EEPROM.write(ee_unidad, unidad);
       EEPROM.write(ee_caudal, caudal);
@@ -74,36 +84,47 @@ void setup() {
   } while (!bucle);
   lcd.clear();
 
+// ACTIVAMOS LAS INTERRUPCIONES EN EL PIN2. INT0
+attachInterrupt( 0, interrupcion, FALLING);
 }
 
 //----------------------------------------------------------------------------------------------------
 //****************************************************************************************************
 
 void loop() {
+
+   
   lcd.setCursor (0, 0);
-  lcd.print ("presione para menu");
+  lcd.print ("Cnt:");
+  lcd.print (contador);
 
+  // calculo caudal en l/s
+  
+  calculoQ= ((float)peso*1000.00)/((float)(tiempo-tiempoAnterior));
+   lcd.setCursor(0,1);
+   lcd.print ("Q: ");
+   lcd.print (calculoQ);
 
-  lcd.setCursor (0, 1);
-  lcd.print ("SW:");
-  if (digitalRead (sw))
-    lcd.print (" ON");
-  else
-    lcd.print ("OFF");
-
-  lcd.print ("IN:");
-  if (digitalRead (entrada))
-    lcd.print (" ON");
-  else
-    lcd.print ("OFF");
-
-
-  lcd.setCursor (13, 1);
-  lcd.print (millis() / 1000);
 
 }// fin loop
 
 //----------------------------------------------------------------------------------------------------
+
+void interrupcion() 
+   {    
+
+    if (millis()> (t0+rebote))
+    {
+        contador= contador +peso ;
+        tiempoAnterior = tiempo;
+        tiempo = millis();
+        t0= millis();
+    }
+      
+   }
+
+//----------------------------------------------------------------------------------------------------
+
 void leeEncoder (byte min, byte max)
 {
 
@@ -252,7 +273,7 @@ void pantallaInicio()
 boolean muestraOpciones ()
 {
   boolean salida = true;   // variable control para salir de bucle
- 
+
   lcd.clear();
   lcd.print ("P: ");
   lcd.print (peso);
