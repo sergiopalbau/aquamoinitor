@@ -23,6 +23,7 @@ LiquidCrystal_I2C lcd(I2C_ADDR, 4, 5, 6, 0, 1, 2, 3, 7, NEGATIVE);
 #define encoder0PinA  3
 #define encoder0PinB  4
 #define sw 5
+#define entrada 2
 
 // variables globales Encoder
 int val;
@@ -45,6 +46,7 @@ void setup() {
   pinMode (encoder0PinA, INPUT);
   pinMode (encoder0PinB, INPUT);
   pinMode (sw, INPUT);
+  pinMode (entrada, INPUT);
 
   // lectura de valores guardados en la ee_prom
 
@@ -75,18 +77,28 @@ void setup() {
 }
 
 //----------------------------------------------------------------------------------------------------
+//****************************************************************************************************
+
 void loop() {
   lcd.setCursor (0, 0);
   lcd.print ("presione para menu");
 
 
   lcd.setCursor (0, 1);
+  lcd.print ("SW:");
   if (digitalRead (sw))
     lcd.print (" ON");
   else
     lcd.print ("OFF");
 
-  lcd.setCursor (12, 1);
+  lcd.print ("IN:");
+  if (digitalRead (entrada))
+    lcd.print (" ON");
+  else
+    lcd.print ("OFF");
+
+
+  lcd.setCursor (13, 1);
   lcd.print (millis() / 1000);
 
 }// fin loop
@@ -228,7 +240,7 @@ void pantallaInicio()
   lcd.clear();
   lcd.setCursor (4, 0);
   lcd.print ("AQUONA");
-  lcd.setCursor (3, 1);
+  lcd.setCursor (2, 1);
   lcd.print ("S . A . R");
   delay (5000);
 }
