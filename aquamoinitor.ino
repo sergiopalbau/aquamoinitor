@@ -2,6 +2,13 @@
 #include <Wire.h>
 #include <LCD.h>
 #include <LiquidCrystal_I2C.h>  // F Malpartida's NewLiquidCrystal library
+#include <EEPROM.h>
+
+
+// posiciones de memoria eeprom
+#define ee_peso 0
+#define ee_unidad 1
+#define ee_caudal 2
 
 // declaraciones para el display i2c
 #define I2C_ADDR    0x20  // Direccion I2C para PCF8574A que es el que lleva nuestra placa diseñada por MJKDZ
@@ -31,19 +38,39 @@ byte caudal = 0; // 0= l/s;  ; 1= m3/h
 //----------------------------------------------------------------------------------------------------
 void setup() {
 
+
   byte bucle = true;
+
+  // declaracion de los puertos
   pinMode (encoder0PinA, INPUT);
   pinMode (encoder0PinB, INPUT);
   pinMode (sw, INPUT);
-  lcd.begin (16, 2); // inicializar lcd
+
+  // lectura de valores guardados en la ee_prom
+
+  peso = EEPROM.read(ee_peso);
+  unidad = EEPROM.read(ee_unidad);
+  caudal = EEPROM.read(ee_caudal);
+
+  // inicializar lcd
+  lcd.begin (16, 2);
   lcd.setBacklight(LED_ON);
 
   pantallaInicio();
   do
   {
-    ajuste();
+
     bucle = muestraOpciones();
+    if (bucle == false)
+    {
+      ajuste();
+      EEPROM.write(ee_peso, peso);
+      EEPROM.write(ee_unidad, unidad);
+      EEPROM.write(ee_caudal, caudal);
+
+    }
   } while (!bucle);
+  lcd.clear();
 
 }
 
@@ -115,6 +142,7 @@ void ajuste ()
     delay(40);
   } while (digitalRead (sw));
   lcd.clear();
+  lcd.setCursor (4, 0);
   lcd.print ("Peso: ");
   lcd.print (peso);
   delay(1000);
@@ -146,6 +174,7 @@ void ajuste ()
   } while (digitalRead (sw));
 
   lcd.clear();
+  lcd.setCursor (1, 0);
   lcd.print ("Unidad: ");
   if (unidad == 0)
     lcd.print ("Litros");
@@ -167,11 +196,11 @@ void ajuste ()
     if (!digitalRead (sw))
       salida = false;
     lcd.setCursor (5, 1);
-    
+
     if (encoder0Pos == 0)
-      lcd.print ("  L/s ");
+      lcd.print ("L / s ");
     if (encoder0Pos == 1)
-      lcd.print (" m3/h");
+      lcd.print (" m3/h ");
   } while (salida);
   caudal = encoder0Pos;
 
@@ -181,7 +210,8 @@ void ajuste ()
   } while (digitalRead (sw));
 
   lcd.clear();
-
+  lcd.setCursor (1, 0);
+  lcd.print ("Caudal :");
   if (caudal == 0)
     lcd.print ("  L/s ");;
   if (caudal == 1 )
@@ -189,21 +219,28 @@ void ajuste ()
 
   delay(1000);
   return;
-  
+
 }
 
 //---------------------------------------------------------------------------------------
 void pantallaInicio()
 {
+  lcd.clear();
+  lcd.setCursor (4, 0);
+  lcd.print ("AQUONA");
+  lcd.setCursor (3, 1);
+  lcd.print ("S . A . R");
+  delay (5000);
+}
 
-delay(1);
+
 }
 
 //-------------------------------------------------------------------------------------
 boolean muestraOpciones ()
 {
-   boolean salida = true;   // variable control para salir de bucle
-  // muestra las opciones
+  boolean salida = true;   // variable control para salir de bucle
+ 
   lcd.clear();
   lcd.print ("P: ");
   lcd.print (peso);
