@@ -44,7 +44,7 @@ float calculoQ;
 
 // variable interrupciones 
 long t0=0;
-#define rebote 60     //ms
+#define rebote 5     //ms
 //----------------------------------------------------------------------------------------------------
 void setup() {
 
@@ -101,11 +101,12 @@ void loop() {
   // calculo caudal en l/s
   
   calculoQ= ((float)peso*1000.00)/((float)(tiempo-tiempoAnterior));
+  
    lcd.setCursor(0,1);
-   lcd.print ("Q: ");
-   lcd.print (calculoQ);
-
-
+   lcd.print (calculoQ,2);
+   lcd.print ("l/s-");
+   lcd.print ((calculoQ*3.6),2);
+   lcd.print ("m3/h");
 }// fin loop
 
 //----------------------------------------------------------------------------------------------------
@@ -113,7 +114,7 @@ void loop() {
 void interrupcion() 
    {    
 
-    if (millis()> (t0+rebote))
+    if (micros()> (t0+rebote))
     {
         contador= contador +peso ;
         tiempoAnterior = tiempo;
@@ -259,10 +260,10 @@ void ajuste ()
 void pantallaInicio()
 {
   lcd.clear();
-  lcd.setCursor (4, 0);
-  lcd.print ("AQUONA");
-  lcd.setCursor (2, 1);
-  lcd.print ("S . A . R");
+  lcd.setCursor (3, 0);
+  lcd.print ("= AQUONA =");
+  lcd.setCursor (3, 1);
+  lcd.print (" =S.A.R=.");
   delay (5000);
 }
 
